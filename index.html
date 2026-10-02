@@ -125,6 +125,146 @@
     .hors-ligne {
       color: #b26a00;
     }
+.gallery-button {
+  background: #e9e9e9;
+  color: #111;
+  border: none;
+  margin-top: 25px;
+}
+
+.gallery-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.retour-button {
+  border: none;
+  background: none;
+  font-size: 17px;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.gallery-title {
+  flex: 1;
+  font-size: 24px;
+  font-weight: bold;
+  margin-right: 45px;
+}
+
+.gallery-tabs {
+  display: flex;
+  background: #e8e8e8;
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.gallery-tab {
+  flex: 1;
+  border: none;
+  padding: 12px;
+  border-radius: 9px;
+  background: transparent;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.gallery-tab.active {
+  background: white;
+  font-weight: bold;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, 1fr);
+  gap: 4px;
+}
+
+.gallery-item {
+  aspect-ratio: 1 / 1;
+  background: #ddd;
+  overflow: hidden;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-loading {
+  padding: 50px 10px;
+  color: #777;
+  grid-column: 1 / -1;
+}
+
+.photo-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.94);
+}
+
+.photo-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-modal-top {
+  text-align: right;
+  padding: 15px;
+}
+
+.photo-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+}
+
+.photo-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.photo-zone img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.photo-actions {
+  padding: 20px;
+}
+
+.download-button {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+  padding: 16px;
+  background: white;
+  color: #111;
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: bold;
+}
+    
   </style>
 </head>
 
@@ -250,6 +390,14 @@
     multiple
   >
 
+  <!-- GALERIE -->
+
+<button
+  class="big-button gallery-button"
+  onclick="ouvrirGalerie()"
+>
+  🖼️ Voir la galerie
+</button>
 
   <div id="message"></div>
 
@@ -269,7 +417,107 @@
   </div>
 
 </div>
+<!-- ================================= -->
+<!-- GALERIE -->
+<!-- ================================= -->
 
+<div
+  id="galerie"
+  class="container"
+  style="display:none;"
+>
+
+  <div class="gallery-header">
+
+    <button
+      class="retour-button"
+      onclick="fermerGalerie()"
+    >
+      ← Retour
+    </button>
+
+    <div class="gallery-title">
+      Galerie
+    </div>
+
+  </div>
+
+
+  <div class="gallery-tabs">
+
+    <button
+      id="tabToutes"
+      class="gallery-tab active"
+      onclick="afficherToutesPhotos()"
+    >
+      Toutes les photos
+    </button>
+
+    <button
+      id="tabMes"
+      class="gallery-tab"
+      onclick="afficherMesPhotos()"
+    >
+      Mes photos
+    </button>
+
+  </div>
+
+
+  <div
+    id="galleryGrid"
+    class="gallery-grid"
+  ></div>
+
+</div>
+
+
+<!-- ================================= -->
+<!-- PHOTO PLEIN ECRAN -->
+<!-- ================================= -->
+
+<div
+  id="photoModal"
+  class="photo-modal"
+>
+
+  <div class="photo-modal-content">
+
+    <div class="photo-modal-top">
+
+      <button
+        class="photo-close"
+        onclick="fermerPhoto()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="photo-zone">
+
+      <img
+        id="photoGrande"
+        alt="Photo"
+      >
+
+    </div>
+
+    <div class="photo-actions">
+
+      <a
+        id="downloadPhoto"
+        class="download-button"
+        download
+      >
+        ⬇️ Télécharger la photo
+      </a>
+
+    </div>
+
+  </div>
+
+</div>
 
 <script>
 
@@ -1557,7 +1805,549 @@ function nettoyerMessage() {
   info.innerHTML = "";
 
 }
+// =====================================================
+// GALERIE
+// =====================================================
 
+let photosGalerie = [];
+
+let filtreGalerie =
+  "toutes";
+
+
+async function ouvrirGalerie() {
+
+  document
+    .getElementById(
+      "application"
+    )
+    .style.display =
+    "none";
+
+
+  document
+    .getElementById(
+      "galerie"
+    )
+    .style.display =
+    "block";
+
+
+  filtreGalerie =
+    "toutes";
+
+
+  mettreAJourOngletsGalerie();
+
+
+  await chargerGalerie();
+
+}
+
+
+function fermerGalerie() {
+
+  document
+    .getElementById(
+      "galerie"
+    )
+    .style.display =
+    "none";
+
+
+  document
+    .getElementById(
+      "application"
+    )
+    .style.display =
+    "block";
+
+}
+
+
+async function chargerGalerie() {
+
+  const grid =
+    document.getElementById(
+      "galleryGrid"
+    );
+
+
+  if (!navigator.onLine) {
+
+    grid.innerHTML =
+      '<div class="gallery-loading">'
+      + '📵 La galerie nécessite une connexion Internet.'
+      + '</div>';
+
+    return;
+
+  }
+
+
+  grid.innerHTML =
+    '<div class="gallery-loading">'
+    + '⏳ Chargement des photos...'
+    + '</div>';
+
+
+  try {
+
+    const reponse =
+      await fetch(
+
+        API_URL +
+        "?action=liste"
+
+      );
+
+
+    if (!reponse.ok) {
+
+      throw new Error(
+        "Erreur serveur"
+      );
+
+    }
+
+
+    const resultat =
+      await reponse.json();
+
+
+    if (!resultat.ok) {
+
+      throw new Error(
+        resultat.erreur ||
+        "Erreur galerie"
+      );
+
+    }
+
+
+    photosGalerie =
+      resultat.photos || [];
+
+
+    afficherGalerie();
+
+  }
+
+
+  catch(erreur) {
+
+    console.error(
+      erreur
+    );
+
+
+    grid.innerHTML =
+      '<div class="gallery-loading">'
+      + '⚠️ Impossible de charger la galerie.'
+      + '</div>';
+
+  }
+
+}
+
+
+function afficherToutesPhotos() {
+
+  filtreGalerie =
+    "toutes";
+
+
+  mettreAJourOngletsGalerie();
+
+  afficherGalerie();
+
+}
+
+
+function afficherMesPhotos() {
+
+  filtreGalerie =
+    "mes";
+
+
+  mettreAJourOngletsGalerie();
+
+  afficherGalerie();
+
+}
+
+
+function mettreAJourOngletsGalerie() {
+
+  const toutes =
+    document.getElementById(
+      "tabToutes"
+    );
+
+
+  const mes =
+    document.getElementById(
+      "tabMes"
+    );
+
+
+  if (
+    filtreGalerie ===
+    "toutes"
+  ) {
+
+    toutes.classList.add(
+      "active"
+    );
+
+    mes.classList.remove(
+      "active"
+    );
+
+  }
+
+  else {
+
+    mes.classList.add(
+      "active"
+    );
+
+    toutes.classList.remove(
+      "active"
+    );
+
+  }
+
+}
+
+
+function obtenirPhotosFiltrees() {
+
+  if (
+    filtreGalerie ===
+    "toutes"
+  ) {
+
+    return photosGalerie;
+
+  }
+
+
+  if (!utilisateur) {
+
+    return [];
+
+  }
+
+
+  const prefixe =
+
+    nettoyerNom(
+      utilisateur.prenom
+    )
+
+    + "_"
+
+    + nettoyerNom(
+      utilisateur.nom
+    )
+
+    + "_photo_";
+
+
+  return photosGalerie.filter(
+
+    function(photo) {
+
+      return photo.nom
+        .toLowerCase()
+        .startsWith(
+          prefixe
+        );
+
+    }
+
+  );
+
+}
+
+
+function afficherGalerie() {
+
+  const grid =
+    document.getElementById(
+      "galleryGrid"
+    );
+
+
+  const photos =
+    obtenirPhotosFiltrees();
+
+
+  if (
+    photos.length === 0
+  ) {
+
+    if (
+      filtreGalerie ===
+      "mes"
+    ) {
+
+      grid.innerHTML =
+        '<div class="gallery-loading">'
+        + '📷 Vous n’avez pas encore envoyé de photo.'
+        + '</div>';
+
+    }
+
+    else {
+
+      grid.innerHTML =
+        '<div class="gallery-loading">'
+        + '📷 La galerie est encore vide.'
+        + '</div>';
+
+    }
+
+    return;
+
+  }
+
+
+  grid.innerHTML = "";
+
+
+  photos.forEach(
+
+    function(photo) {
+
+      const element =
+        document.createElement(
+          "div"
+        );
+
+
+      element.className =
+        "gallery-item";
+
+
+      element.innerHTML =
+        '<div class="gallery-loading">'
+        + '⏳'
+        + '</div>';
+
+
+      element.onclick =
+        function() {
+
+          ouvrirPhoto(
+            photo
+          );
+
+        };
+
+
+      grid.appendChild(
+        element
+      );
+
+
+      chargerMiniature(
+        photo,
+        element
+      );
+
+    }
+
+  );
+
+}
+
+
+async function chargerMiniature(
+  photo,
+  element
+) {
+
+  try {
+
+    const resultat =
+      await recupererPhotoAPI(
+        photo.id
+      );
+
+
+    const image =
+      document.createElement(
+        "img"
+      );
+
+
+    image.src =
+      resultat.data;
+
+
+    image.alt =
+      "Photo";
+
+
+    element.innerHTML =
+      "";
+
+
+    element.appendChild(
+      image
+    );
+
+  }
+
+  catch(erreur) {
+
+    console.error(
+      erreur
+    );
+
+
+    element.innerHTML =
+      "⚠️";
+
+  }
+
+}
+
+
+async function recupererPhotoAPI(id) {
+
+  const reponse =
+    await fetch(
+
+      API_URL
+
+      + "?action=photo&id="
+
+      + encodeURIComponent(id)
+
+    );
+
+
+  if (!reponse.ok) {
+
+    throw new Error(
+      "Photo inaccessible."
+    );
+
+  }
+
+
+  const resultat =
+    await reponse.json();
+
+
+  if (!resultat.ok) {
+
+    throw new Error(
+      resultat.erreur ||
+      "Photo inaccessible."
+    );
+
+  }
+
+
+  return resultat;
+
+}
+
+
+async function ouvrirPhoto(photo) {
+
+  const modal =
+    document.getElementById(
+      "photoModal"
+    );
+
+
+  const grande =
+    document.getElementById(
+      "photoGrande"
+    );
+
+
+  const download =
+    document.getElementById(
+      "downloadPhoto"
+    );
+
+
+  modal.style.display =
+    "block";
+
+
+  grande.removeAttribute(
+    "src"
+  );
+
+
+  download.style.display =
+    "none";
+
+
+  try {
+
+    const resultat =
+      await recupererPhotoAPI(
+        photo.id
+      );
+
+
+    grande.src =
+      resultat.data;
+
+
+    download.href =
+      resultat.data;
+
+
+    download.download =
+      resultat.nom;
+
+
+    download.style.display =
+      "block";
+
+  }
+
+  catch(erreur) {
+
+    console.error(
+      erreur
+    );
+
+  }
+
+}
+
+
+function fermerPhoto() {
+
+  const modal =
+    document.getElementById(
+      "photoModal"
+    );
+
+
+  modal.style.display =
+    "none";
+
+
+  document
+    .getElementById(
+      "photoGrande"
+    )
+    .removeAttribute(
+      "src"
+    );
+
+}
 
 // =====================================================
 // DEMARRAGE
