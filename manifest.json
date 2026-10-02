@@ -1,0 +1,11 @@
+{
+  "name": "Photos Mariage",
+  "short_name": "Photos Mariage",
+  "description": "Partagez vos photos du mariage",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#111111",
+  "lang": "fr"
+}
