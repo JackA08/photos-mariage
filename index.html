@@ -1,1 +1,1573 @@
+<!DOCTYPE html>
+<html lang="fr">
 
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#111111">
+
+  <link rel="manifest" href="./manifest.json">
+
+  <title>Photos Mariage</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    .status {
+      background: white;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 25px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .big-button {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 20px;
+      border-radius: 15px;
+      font-size: 19px;
+      cursor: pointer;
+    }
+
+    .camera-button {
+      background: #111;
+      color: white;
+    }
+
+    .library-button {
+      background: white;
+      color: #111;
+      border: 2px solid #111;
+      margin-top: 12px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .text-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      font-size: 17px;
+    }
+
+    .start-button {
+      width: 100%;
+      background: #111;
+      color: white;
+      padding: 18px;
+      border: 0;
+      border-radius: 15px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 20px;
+      font-weight: bold;
+      line-height: 1.5;
+    }
+
+    #info {
+      margin-top: 8px;
+      color: #777;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .offline {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #fff3cd;
+      display: none;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .online {
+      color: #198754;
+    }
+
+    .hors-ligne {
+      color: #b26a00;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ================================ -->
+<!-- IDENTIFICATION -->
+<!-- ================================ -->
+
+<div
+  id="identification"
+  class="container"
+  style="display:none;"
+>
+
+  <h1>📸 Bienvenue !</h1>
+
+  <div class="subtitle">
+    Avant de commencer, dites-nous qui vous êtes.
+  </div>
+
+  <input
+    id="prenom"
+    class="text-input"
+    type="text"
+    placeholder="Prénom"
+    autocomplete="given-name"
+  >
+
+  <input
+    id="nom"
+    class="text-input"
+    type="text"
+    placeholder="Nom"
+    autocomplete="family-name"
+  >
+
+  <button
+    class="start-button"
+    onclick="enregistrerIdentite()"
+  >
+    Commencer 📸
+  </button>
+
+  <div
+    id="erreur-identite"
+    style="margin-top:15px;color:#b00020;"
+  ></div>
+
+</div>
+
+
+<!-- ================================ -->
+<!-- APPLICATION -->
+<!-- ================================ -->
+
+<div
+  id="application"
+  class="container"
+  style="display:none;"
+>
+
+  <h1>📸 Photos Mariage</h1>
+
+  <div class="subtitle">
+    Prenez vos photos et partagez-les avec nous !
+  </div>
+
+  <div class="status">
+
+    <div id="etatConnexion"></div>
+
+    <div>
+      🟢
+      <span id="envoyees">0</span>
+      envoyée(s)
+
+      &nbsp;•&nbsp;
+
+      🟠
+      <span id="attente">0</span>
+      en attente
+    </div>
+
+    <div
+      id="uploadStatus"
+      style="margin-top:4px;color:#777;"
+    ></div>
+
+  </div>
+
+
+  <!-- CAMERA -->
+
+  <label
+    class="big-button camera-button"
+    for="camera"
+  >
+    📷 Prendre une photo
+  </label>
+
+  <input
+    type="file"
+    id="camera"
+    accept="image/*"
+    capture="environment"
+  >
+
+
+  <!-- PHOTOTHEQUE -->
+
+  <label
+    class="big-button library-button"
+    for="phototheque"
+  >
+    🖼️ Ajouter depuis mes photos
+  </label>
+
+  <input
+    type="file"
+    id="phototheque"
+    accept="image/*"
+    multiple
+  >
+
+
+  <div id="message"></div>
+
+  <div id="info"></div>
+
+
+  <div
+    class="offline"
+    id="offline"
+  >
+    📵 <strong>Vous êtes hors connexion.</strong>
+    <br><br>
+    Continuez à prendre des photos normalement.
+    <br>
+    Elles sont sécurisées sur ce téléphone et seront
+    envoyées automatiquement dès que la connexion reviendra.
+  </div>
+
+</div>
+
+
+<script>
+
+// =====================================================
+// CONFIGURATION
+// =====================================================
+
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbwwZ2GFefr_KiN3JzG3gwCj_sZdXSqA5rfx10SEveUyHyP-fMwzqjg1GKyOaDs1pvvm/exec";
+
+const TAILLE_LOT = 5;
+
+const MAX_DIMENSION = 2000;
+
+const QUALITE_JPEG = 0.82;
+
+
+// =====================================================
+// VARIABLES
+// =====================================================
+
+let db = null;
+
+let utilisateur = null;
+
+let envoiEnCours = false;
+
+let compteurEnvoyees =
+  parseInt(
+    localStorage.getItem(
+      "photosInvitesEnvoyees"
+    ) || "0"
+  );
+
+
+const camera =
+  document.getElementById("camera");
+
+const phototheque =
+  document.getElementById("phototheque");
+
+const message =
+  document.getElementById("message");
+
+const info =
+  document.getElementById("info");
+
+const offline =
+  document.getElementById("offline");
+
+const uploadStatus =
+  document.getElementById("uploadStatus");
+
+const etatConnexion =
+  document.getElementById("etatConnexion");
+
+
+// =====================================================
+// SERVICE WORKER
+// =====================================================
+
+if ("serviceWorker" in navigator) {
+
+  window.addEventListener(
+    "load",
+    function() {
+
+      navigator.serviceWorker
+        .register("./service-worker.js")
+        .then(function() {
+
+          console.log(
+            "Service Worker actif."
+          );
+
+        })
+        .catch(function(erreur) {
+
+          console.error(
+            "Erreur Service Worker :",
+            erreur
+          );
+
+        });
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// IDENTIFICATION
+// =====================================================
+
+function chargerIdentite() {
+
+  const sauvegarde =
+    localStorage.getItem(
+      "photosInvitesUtilisateur"
+    );
+
+
+  if (sauvegarde) {
+
+    try {
+
+      utilisateur =
+        JSON.parse(sauvegarde);
+
+      afficherApplication();
+
+    }
+
+    catch(e) {
+
+      localStorage.removeItem(
+        "photosInvitesUtilisateur"
+      );
+
+      afficherIdentification();
+
+    }
+
+  }
+
+  else {
+
+    afficherIdentification();
+
+  }
+
+}
+
+
+function afficherApplication() {
+
+  document
+    .getElementById("identification")
+    .style.display =
+    "none";
+
+  document
+    .getElementById("application")
+    .style.display =
+    "block";
+
+}
+
+
+function afficherIdentification() {
+
+  document
+    .getElementById("identification")
+    .style.display =
+    "block";
+
+  document
+    .getElementById("application")
+    .style.display =
+    "none";
+
+}
+
+
+function enregistrerIdentite() {
+
+  const prenom =
+    document
+      .getElementById("prenom")
+      .value
+      .trim();
+
+  const nom =
+    document
+      .getElementById("nom")
+      .value
+      .trim();
+
+
+  if (!prenom || !nom) {
+
+    document
+      .getElementById(
+        "erreur-identite"
+      )
+      .innerText =
+      "Merci d'indiquer votre prénom et votre nom.";
+
+    return;
+
+  }
+
+
+  utilisateur = {
+    prenom: prenom,
+    nom: nom
+  };
+
+
+  localStorage.setItem(
+    "photosInvitesUtilisateur",
+    JSON.stringify(utilisateur)
+  );
+
+
+  afficherApplication();
+
+}
+
+
+// =====================================================
+// NOM DES PHOTOS
+// =====================================================
+
+function nettoyerNom(texte) {
+
+  return texte
+    .normalize("NFD")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .replace(
+      /[^a-zA-Z0-9]/g,
+      "_"
+    )
+    .toLowerCase();
+
+}
+
+
+function creerNomFichier() {
+
+  return (
+    nettoyerNom(
+      utilisateur.prenom
+    )
+
+    + "_"
+
+    + nettoyerNom(
+      utilisateur.nom
+    )
+
+    + "_photo_"
+
+    + Date.now()
+
+    + "_"
+
+    + Math.random()
+        .toString(36)
+        .substring(2,7)
+
+    + ".jpg"
+  );
+
+}
+
+
+// =====================================================
+// INDEXED DB
+// =====================================================
+
+const requestDB =
+  indexedDB.open(
+    "PhotosInvitesDB",
+    1
+  );
+
+
+requestDB.onupgradeneeded =
+  function(event) {
+
+    db =
+      event.target.result;
+
+
+    if (
+      !db.objectStoreNames
+        .contains("photos")
+    ) {
+
+      db.createObjectStore(
+        "photos",
+        {
+          keyPath: "id",
+          autoIncrement: true
+        }
+      );
+
+    }
+
+  };
+
+
+requestDB.onsuccess =
+  function(event) {
+
+    db =
+      event.target.result;
+
+    mettreAJourCompteurs();
+
+    traiterFile();
+
+  };
+
+
+requestDB.onerror =
+  function() {
+
+    message.innerHTML =
+      "❌ Le stockage local n'est pas disponible.";
+
+  };
+
+
+// =====================================================
+// COMPRESSION
+// =====================================================
+
+function compresserPhoto(fichier) {
+
+  return new Promise(
+    function(resolve, reject) {
+
+      if (
+        !fichier ||
+        !fichier.type.startsWith(
+          "image/"
+        )
+      ) {
+
+        reject(
+          new Error(
+            "Fichier image invalide."
+          )
+        );
+
+        return;
+
+      }
+
+
+      const url =
+        URL.createObjectURL(
+          fichier
+        );
+
+
+      const image =
+        new Image();
+
+
+      image.onload =
+        function() {
+
+          try {
+
+            let largeur =
+              image.naturalWidth ||
+              image.width;
+
+            let hauteur =
+              image.naturalHeight ||
+              image.height;
+
+
+            if (
+              largeur > hauteur &&
+              largeur > MAX_DIMENSION
+            ) {
+
+              hauteur =
+                Math.round(
+                  hauteur *
+                  MAX_DIMENSION /
+                  largeur
+                );
+
+              largeur =
+                MAX_DIMENSION;
+
+            }
+
+            else if (
+              hauteur > MAX_DIMENSION
+            ) {
+
+              largeur =
+                Math.round(
+                  largeur *
+                  MAX_DIMENSION /
+                  hauteur
+                );
+
+              hauteur =
+                MAX_DIMENSION;
+
+            }
+
+
+            const canvas =
+              document.createElement(
+                "canvas"
+              );
+
+            canvas.width =
+              largeur;
+
+            canvas.height =
+              hauteur;
+
+
+            const ctx =
+              canvas.getContext(
+                "2d"
+              );
+
+
+            ctx.drawImage(
+              image,
+              0,
+              0,
+              largeur,
+              hauteur
+            );
+
+
+            const photo =
+              canvas.toDataURL(
+                "image/jpeg",
+                QUALITE_JPEG
+              );
+
+
+            URL.revokeObjectURL(
+              url
+            );
+
+
+            resolve(photo);
+
+          }
+
+          catch(erreur) {
+
+            URL.revokeObjectURL(
+              url
+            );
+
+            reject(erreur);
+
+          }
+
+        };
+
+
+      image.onerror =
+        function() {
+
+          URL.revokeObjectURL(
+            url
+          );
+
+          reject(
+            new Error(
+              "Photo illisible."
+            )
+          );
+
+        };
+
+
+      image.src =
+        url;
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// SAUVEGARDE LOCALE
+// =====================================================
+
+function sauvegarderPhoto(photo) {
+
+  return new Promise(
+    function(resolve, reject) {
+
+      if (
+        !db ||
+        !utilisateur
+      ) {
+
+        reject(
+          new Error(
+            "Stockage local indisponible."
+          )
+        );
+
+        return;
+
+      }
+
+
+      const transaction =
+        db.transaction(
+          ["photos"],
+          "readwrite"
+        );
+
+
+      const store =
+        transaction.objectStore(
+          "photos"
+        );
+
+
+      store.add({
+
+        photo: photo,
+
+        nom:
+          creerNomFichier(),
+
+        prenom:
+          utilisateur.prenom,
+
+        nomUtilisateur:
+          utilisateur.nom,
+
+        date:
+          Date.now()
+
+      });
+
+
+      transaction.oncomplete =
+        function() {
+
+          mettreAJourCompteurs();
+
+          resolve();
+
+        };
+
+
+      transaction.onerror =
+        function() {
+
+          reject(
+            transaction.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// CAMERA
+// =====================================================
+
+camera.addEventListener(
+  "change",
+  async function() {
+
+    const fichier =
+      this.files[0];
+
+
+    if (!fichier)
+      return;
+
+
+    message.innerHTML =
+      "⚙️ Préparation de la photo...";
+
+
+    try {
+
+      const photo =
+        await compresserPhoto(
+          fichier
+        );
+
+
+      await sauvegarderPhoto(
+        photo
+      );
+
+
+      if (navigator.onLine) {
+
+        message.innerHTML =
+          "✅ Photo sécurisée !";
+
+      }
+
+      else {
+
+        message.innerHTML =
+          "📵 Photo sécurisée sur ce téléphone !";
+
+      }
+
+
+      traiterFile();
+
+    }
+
+    catch(erreur) {
+
+      console.error(erreur);
+
+      message.innerHTML =
+        "❌ Impossible de traiter cette photo.";
+
+      info.innerHTML =
+        erreur.message;
+
+    }
+
+
+    camera.value = "";
+
+
+    setTimeout(
+      nettoyerMessage,
+      2200
+    );
+
+  }
+);
+
+
+// =====================================================
+// PHOTOTHEQUE
+// =====================================================
+
+phototheque.addEventListener(
+  "change",
+  async function() {
+
+    const fichiers =
+      Array.from(
+        this.files
+      );
+
+
+    if (
+      fichiers.length === 0
+    )
+      return;
+
+
+    let ajoutees = 0;
+
+    let erreurs = 0;
+
+    const TAILLE_COMPRESSION = 3;
+
+
+    for (
+      let debut = 0;
+      debut < fichiers.length;
+      debut += TAILLE_COMPRESSION
+    ) {
+
+      const groupe =
+        fichiers.slice(
+          debut,
+          debut + TAILLE_COMPRESSION
+        );
+
+
+      message.innerHTML =
+        "⚙️ Préparation "
+
+        + Math.min(
+            debut + TAILLE_COMPRESSION,
+            fichiers.length
+          )
+
+        + " / "
+
+        + fichiers.length
+
+        + "...";
+
+
+      const resultats =
+        await Promise.allSettled(
+
+          groupe.map(
+            async function(fichier) {
+
+              const photo =
+                await compresserPhoto(
+                  fichier
+                );
+
+              await sauvegarderPhoto(
+                photo
+              );
+
+            }
+          )
+
+        );
+
+
+      resultats.forEach(
+        function(resultat) {
+
+          if (
+            resultat.status ===
+            "fulfilled"
+          ) {
+
+            ajoutees++;
+
+          }
+
+          else {
+
+            erreurs++;
+
+            console.error(
+              resultat.reason
+            );
+
+          }
+
+        }
+      );
+
+
+      /*
+       * Les premières photos peuvent
+       * commencer à partir pendant que
+       * les autres sont préparées.
+       */
+
+      traiterFile();
+
+    }
+
+
+    phototheque.value = "";
+
+
+    if (
+      ajoutees > 0 &&
+      erreurs === 0
+    ) {
+
+      if (navigator.onLine) {
+
+        message.innerHTML =
+          "✅ "
+          + ajoutees
+          + " photo(s) sécurisée(s) !";
+
+      }
+
+      else {
+
+        message.innerHTML =
+          "📵 "
+          + ajoutees
+          + " photo(s) sécurisée(s) sur ce téléphone !";
+
+      }
+
+    }
+
+    else if (
+      ajoutees > 0
+    ) {
+
+      message.innerHTML =
+        "⚠️ "
+        + ajoutees
+        + " ajoutée(s), "
+        + erreurs
+        + " non traitée(s).";
+
+    }
+
+    else {
+
+      message.innerHTML =
+        "❌ Aucune photo n'a pu être ajoutée.";
+
+    }
+
+
+    traiterFile();
+
+
+    setTimeout(
+      nettoyerMessage,
+      3500
+    );
+
+  }
+);
+
+
+// =====================================================
+// RECUPERATION LOT
+// =====================================================
+
+function obtenirProchainLot() {
+
+  return new Promise(
+    function(resolve, reject) {
+
+      const transaction =
+        db.transaction(
+          ["photos"],
+          "readonly"
+        );
+
+
+      const store =
+        transaction.objectStore(
+          "photos"
+        );
+
+
+      const photos = [];
+
+
+      const cursorRequest =
+        store.openCursor();
+
+
+      cursorRequest.onsuccess =
+        function(event) {
+
+          const cursor =
+            event.target.result;
+
+
+          if (
+            cursor &&
+            photos.length < TAILLE_LOT
+          ) {
+
+            photos.push({
+
+              id:
+                cursor.primaryKey,
+
+              nom:
+                cursor.value.nom,
+
+              data:
+                cursor.value.photo
+
+            });
+
+
+            cursor.continue();
+
+          }
+
+          else {
+
+            resolve(photos);
+
+          }
+
+        };
+
+
+      cursorRequest.onerror =
+        function() {
+
+          reject(
+            cursorRequest.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// ENVOI API
+// =====================================================
+
+async function traiterFile() {
+
+  if (
+    !db ||
+    envoiEnCours ||
+    !navigator.onLine
+  ) {
+
+    return;
+
+  }
+
+
+  let lot;
+
+
+  try {
+
+    lot =
+      await obtenirProchainLot();
+
+  }
+
+  catch(erreur) {
+
+    console.error(erreur);
+
+    return;
+
+  }
+
+
+  if (
+    lot.length === 0
+  ) {
+
+    uploadStatus.innerHTML = "";
+
+    return;
+
+  }
+
+
+  envoiEnCours = true;
+
+
+  uploadStatus.innerHTML =
+    "☁️ Envoi de "
+    + lot.length
+    + " photo(s)...";
+
+
+  const photosServeur =
+    lot.map(
+      function(photo) {
+
+        return {
+          nom: photo.nom,
+          data: photo.data
+        };
+
+      }
+    );
+
+
+  try {
+
+    /*
+     * text/plain évite une requête
+     * CORS preflight supplémentaire
+     * avec Apps Script.
+     */
+
+    const reponse =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body:
+            JSON.stringify({
+              photos:
+                photosServeur
+            })
+        }
+      );
+
+
+    if (!reponse.ok) {
+
+      throw new Error(
+        "Erreur serveur "
+        + reponse.status
+      );
+
+    }
+
+
+    const resultat =
+      await reponse.json();
+
+
+    if (!resultat.ok) {
+
+      throw new Error(
+        resultat.erreur ||
+        "Erreur lors de l'envoi."
+      );
+
+    }
+
+
+    await supprimerLotLocal(
+      lot.map(
+        function(photo) {
+          return photo.id;
+        }
+      )
+    );
+
+  }
+
+  catch(erreur) {
+
+    console.error(
+      "Erreur upload :",
+      erreur
+    );
+
+
+    envoiEnCours = false;
+
+
+    uploadStatus.innerHTML =
+      "⚠️ Photos conservées en attente";
+
+
+    /*
+     * On ne supprime absolument rien.
+     */
+
+  }
+
+}
+
+
+// =====================================================
+// SUPPRESSION APRES CONFIRMATION
+// =====================================================
+
+function supprimerLotLocal(ids) {
+
+  return new Promise(
+    function(resolve, reject) {
+
+      const transaction =
+        db.transaction(
+          ["photos"],
+          "readwrite"
+        );
+
+
+      const store =
+        transaction.objectStore(
+          "photos"
+        );
+
+
+      ids.forEach(
+        function(id) {
+
+          store.delete(id);
+
+        }
+      );
+
+
+      transaction.oncomplete =
+        function() {
+
+          compteurEnvoyees +=
+            ids.length;
+
+
+          localStorage.setItem(
+            "photosInvitesEnvoyees",
+            compteurEnvoyees
+          );
+
+
+          document
+            .getElementById(
+              "envoyees"
+            )
+            .innerText =
+            compteurEnvoyees;
+
+
+          envoiEnCours =
+            false;
+
+
+          mettreAJourCompteurs();
+
+
+          resolve();
+
+
+          /*
+           * Lot suivant.
+           */
+
+          traiterFile();
+
+        };
+
+
+      transaction.onerror =
+        function() {
+
+          envoiEnCours = false;
+
+          reject(
+            transaction.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// COMPTEURS
+// =====================================================
+
+function mettreAJourCompteurs() {
+
+  if (!db)
+    return;
+
+
+  document
+    .getElementById(
+      "envoyees"
+    )
+    .innerText =
+    compteurEnvoyees;
+
+
+  const transaction =
+    db.transaction(
+      ["photos"],
+      "readonly"
+    );
+
+
+  const store =
+    transaction.objectStore(
+      "photos"
+    );
+
+
+  const count =
+    store.count();
+
+
+  count.onsuccess =
+    function() {
+
+      document
+        .getElementById(
+          "attente"
+        )
+        .innerText =
+        count.result;
+
+
+      if (
+        count.result === 0 &&
+        !envoiEnCours
+      ) {
+
+        uploadStatus.innerHTML = "";
+
+      }
+
+    };
+
+}
+
+
+// =====================================================
+// CONNEXION
+// =====================================================
+
+function statutConnexion() {
+
+  if (navigator.onLine) {
+
+    offline.style.display =
+      "none";
+
+
+    etatConnexion.innerHTML =
+      '<span class="online">'
+      + '● En ligne'
+      + '</span>';
+
+  }
+
+  else {
+
+    offline.style.display =
+      "block";
+
+
+    etatConnexion.innerHTML =
+      '<span class="hors-ligne">'
+      + '● Hors connexion'
+      + '</span>';
+
+
+    uploadStatus.innerHTML =
+      "📱 Photos conservées sur ce téléphone";
+
+  }
+
+}
+
+
+window.addEventListener(
+  "online",
+  function() {
+
+    statutConnexion();
+
+
+    message.innerHTML =
+      "🌐 Connexion retrouvée — envoi des photos...";
+
+
+    traiterFile();
+
+
+    setTimeout(
+      nettoyerMessage,
+      2500
+    );
+
+  }
+);
+
+
+window.addEventListener(
+  "offline",
+  function() {
+
+    statutConnexion();
+
+  }
+);
+
+
+// =====================================================
+// MESSAGES
+// =====================================================
+
+function nettoyerMessage() {
+
+  message.innerHTML = "";
+
+  info.innerHTML = "";
+
+}
+
+
+// =====================================================
+// DEMARRAGE
+// =====================================================
+
+chargerIdentite();
+
+statutConnexion();
+
+</script>
+
+</body>
+</html>
