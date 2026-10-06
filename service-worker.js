@@ -1,4 +1,4 @@
-const CACHE_NAME = "photos-mariage-v1-2";
+const CACHE_NAME = "photos-mariage-v1-3";
 
 const FICHIERS_A_METTRE_EN_CACHE = [
   "./",
