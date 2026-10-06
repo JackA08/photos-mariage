@@ -281,6 +281,42 @@
   font-size: 16px;
   background: white;
 }
+.lock-screen {
+  background: white;
+  border-radius: 18px;
+  padding: 35px 25px;
+  margin-top: 20px;
+}
+
+.lock-icon {
+  font-size: 55px;
+  margin-bottom: 20px;
+}
+
+.lock-screen h2 {
+  margin: 0 0 15px 0;
+  font-size: 24px;
+}
+
+.lock-screen p {
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 30px;
+}
+
+.unlock-date {
+  background: #f5f5f5;
+  border-radius: 14px;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+.unlock-date strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 18px;
+  color: #111;
+}
     
   </style>
 </head>
@@ -406,7 +442,60 @@
     accept="image/*"
     multiple
   >
+<!-- ================================= -->
+<!-- GALERIE VERROUILLEE -->
+<!-- ================================= -->
 
+<div
+  id="galerieVerrouillee"
+  class="container"
+  style="display:none;"
+>
+
+  <div class="gallery-header">
+
+    <button
+      class="retour-button"
+      onclick="fermerGalerieVerrouillee()"
+    >
+      ← Retour
+    </button>
+
+    <div class="gallery-title">
+      Galerie
+    </div>
+
+  </div>
+
+
+  <div class="lock-screen">
+
+    <div class="lock-icon">
+      🔒
+    </div>
+
+    <h2>
+      La galerie ouvrira bientôt
+    </h2>
+
+    <p>
+      Continuez à capturer les meilleurs
+      moments du mariage 📸
+    </p>
+
+    <div class="unlock-date">
+
+      Les photos seront disponibles à partir du
+
+      <strong>
+        1er janvier 2027 à 08h00
+      </strong>
+
+    </div>
+
+  </div>
+
+</div>
   <!-- GALERIE -->
 
 <button
@@ -1843,9 +1932,136 @@ let filtreGalerie =
 
 async function ouvrirGalerie() {
 
+  /*
+   * On vérifie d'abord auprès du serveur
+   * si la galerie est ouverte.
+   */
+
+  message.innerHTML =
+    "⏳ Vérification de la galerie...";
+
+
+  try {
+
+    const reponse =
+      await fetch(
+
+        API_URL +
+        "?action=statutGalerie"
+
+      );
+
+
+    if (!reponse.ok) {
+
+      throw new Error(
+        "Impossible de vérifier la galerie."
+      );
+
+    }
+
+
+    const resultat =
+      await reponse.json();
+
+
+    if (!resultat.ok) {
+
+      throw new Error(
+        resultat.erreur ||
+        "Erreur galerie."
+      );
+
+    }
+
+
+    message.innerHTML = "";
+
+
+    /*
+     * GALERIE VERROUILLEE
+     */
+
+    if (!resultat.ouverte) {
+
+      document
+        .getElementById(
+          "application"
+        )
+        .style.display =
+        "none";
+
+
+      document
+        .getElementById(
+          "galerieVerrouillee"
+        )
+        .style.display =
+        "block";
+
+
+      return;
+
+    }
+
+
+    /*
+     * GALERIE OUVERTE
+     */
+
+    document
+      .getElementById(
+        "application"
+      )
+      .style.display =
+      "none";
+
+
+    document
+      .getElementById(
+        "galerie"
+      )
+      .style.display =
+      "block";
+
+
+    filtreGalerie =
+      "toutes";
+
+
+    mettreAJourOngletsGalerie();
+
+
+    await chargerGalerie();
+
+  }
+
+
+  catch(erreur) {
+
+    console.error(
+      erreur
+    );
+
+
+    message.innerHTML =
+      "⚠️ Impossible de vérifier l'accès à la galerie.";
+
+
+    setTimeout(
+      nettoyerMessage,
+      3000
+    );
+
+  }
+
+}
+
+  function fermerGalerieVerrouillee() {
+
   document
     .getElementById(
-      "application"
+      "galerieVerrouillee"
     )
     .style.display =
     "none";
@@ -1853,20 +2069,10 @@ async function ouvrirGalerie() {
 
   document
     .getElementById(
-      "galerie"
+      "application"
     )
     .style.display =
     "block";
-
-
-  filtreGalerie =
-    "toutes";
-
-
-  mettreAJourOngletsGalerie();
-
-
-  await chargerGalerie();
 
 }
 
