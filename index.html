@@ -2422,12 +2422,10 @@ async function ouvrirPhoto(photo) {
 
 }
 
-  async function enregistrerPhotoTelephone() {
+async function enregistrerPhotoTelephone() {
 
   if (!photoActuelle) {
-
     return;
-
   }
 
 
@@ -2436,7 +2434,6 @@ async function ouvrirPhoto(photo) {
       "downloadPhoto"
     );
 
-
   const texteInitial =
     bouton.innerHTML;
 
@@ -2444,23 +2441,21 @@ async function ouvrirPhoto(photo) {
   bouton.innerHTML =
     "⏳ Préparation...";
 
-
   bouton.disabled =
     true;
 
 
   try {
 
+    /*
+     * Récupération de la photo.
+     */
+
     const resultat =
       await recupererPhotoAPI(
         photoActuelle.id
       );
 
-
-    /*
-     * Transformation Base64
-     * vers véritable fichier image.
-     */
 
     const reponse =
       await fetch(
@@ -2472,106 +2467,130 @@ async function ouvrirPhoto(photo) {
       await reponse.blob();
 
 
-    const fichier =
-      new File(
+    /*
+     * Détection iPhone / iPad.
+     */
 
-        [blob],
-
-        resultat.nom,
-
-        {
-          type:
-            resultat.mimeType ||
-            "image/jpeg"
-        }
-
+    const estIOS =
+      /iPad|iPhone|iPod/.test(
+        navigator.userAgent
       );
 
 
     /*
-     * Sur iPhone / Android compatibles :
-     * ouverture de la feuille de partage.
+     * ==================================
+     * IPHONE
+     * ==================================
+     *
+     * On conserve le partage natif,
+     * qui permet "Enregistrer l'image".
      */
 
     if (
-      navigator.share &&
-      navigator.canShare &&
-      navigator.canShare({
-        files: [fichier]
-      })
+      estIOS &&
+      navigator.share
     ) {
 
-      await navigator.share({
-
-        files:
-          [fichier],
-
-        title:
-          "Photo du mariage"
-
-      });
-
-    }
-
-    else {
-
-      /*
-       * Secours pour les navigateurs
-       * sans partage de fichiers.
-       */
-
-      const url =
-        URL.createObjectURL(
-          blob
+      const fichier =
+        new File(
+          [blob],
+          resultat.nom,
+          {
+            type:
+              resultat.mimeType ||
+              "image/jpeg"
+          }
         );
 
 
-      const lien =
-        document.createElement(
-          "a"
-        );
+      if (
+        !navigator.canShare ||
+        navigator.canShare({
+          files: [fichier]
+        })
+      ) {
+
+        await navigator.share({
+
+          files:
+            [fichier],
+
+          title:
+            "Photo du mariage"
+
+        });
 
 
-      lien.href =
-        url;
+        return;
 
-
-      lien.download =
-        resultat.nom;
-
-
-      document.body.appendChild(
-        lien
-      );
-
-
-      lien.click();
-
-
-      lien.remove();
-
-
-      setTimeout(
-        function() {
-
-          URL.revokeObjectURL(
-            url
-          );
-
-        },
-        1000
-      );
+      }
 
     }
+
+
+    /*
+     * ==================================
+     * ANDROID / SAMSUNG / PC
+     * ==================================
+     *
+     * Téléchargement direct du JPG.
+     */
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+
+    const lien =
+      document.createElement(
+        "a"
+      );
+
+
+    lien.href =
+      url;
+
+    lien.download =
+      resultat.nom;
+
+    lien.style.display =
+      "none";
+
+
+    document.body.appendChild(
+      lien
+    );
+
+
+    lien.click();
+
+
+    document.body.removeChild(
+      lien
+    );
+
+
+    /*
+     * On attend avant de supprimer
+     * l'URL temporaire.
+     */
+
+    setTimeout(
+      function() {
+
+        URL.revokeObjectURL(
+          url
+        );
+
+      },
+      10000
+    );
 
   }
 
-  catch(erreur) {
 
-    /*
-     * Fermer volontairement la feuille
-     * de partage n'est pas une vraie erreur.
-     */
+  catch(erreur) {
 
     if (
       erreur.name !==
@@ -2582,6 +2601,7 @@ async function ouvrirPhoto(photo) {
         erreur
       );
 
+
       alert(
         "Impossible d'enregistrer cette photo."
       );
@@ -2590,11 +2610,11 @@ async function ouvrirPhoto(photo) {
 
   }
 
+
   finally {
 
     bouton.innerHTML =
       texteInitial;
-
 
     bouton.disabled =
       false;
