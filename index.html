@@ -1,22 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111111">
-
   <link rel="manifest" href="./manifest.json">
-
   <title>Photos Mariage</title>
 
   <style>
-    body {
+body {
       font-family: Arial, sans-serif;
       margin: 0;
       background: #f5f5f5;
@@ -317,298 +309,156 @@
   font-size: 18px;
   color: #111;
 }
-    
   </style>
 </head>
 
 <body>
 
-<!-- ================================ -->
-<!-- IDENTIFICATION -->
-<!-- ================================ -->
+  <!-- IDENTIFICATION -->
+  <div id="identification" class="container" style="display:none;">
+    <h1>📸 Bienvenue !</h1>
+    <div class="subtitle">Avant de commencer, dites-nous qui vous êtes.</div>
 
-<div
-  id="identification"
-  class="container"
-  style="display:none;"
->
+    <input id="prenom" class="text-input" type="text" placeholder="Prénom" autocomplete="given-name">
+    <input id="nom" class="text-input" type="text" placeholder="Nom" autocomplete="family-name">
 
-  <h1>📸 Bienvenue !</h1>
-
-  <div class="subtitle">
-    Avant de commencer, dites-nous qui vous êtes.
-  </div>
-
-  <input
-    id="prenom"
-    class="text-input"
-    type="text"
-    placeholder="Prénom"
-    autocomplete="given-name"
-  >
-
-  <input
-    id="nom"
-    class="text-input"
-    type="text"
-    placeholder="Nom"
-    autocomplete="family-name"
-  >
-
-  <button
-    class="start-button"
-    onclick="enregistrerIdentite()"
-  >
-    Commencer 📸
-  </button>
-
-  <div
-    id="erreur-identite"
-    style="margin-top:15px;color:#b00020;"
-  ></div>
-
-</div>
-
-
-<!-- ================================ -->
-<!-- APPLICATION -->
-<!-- ================================ -->
-
-<div
-  id="application"
-  class="container"
-  style="display:none;"
->
-
-  <h1>📸 Photos Mariage</h1>
-
-  <div class="subtitle">
-    Prenez vos photos et partagez-les avec nous !
-  </div>
-
-  <div class="status">
-
-    <div id="etatConnexion"></div>
-
-    <div>
-      🟢
-      <span id="envoyees">0</span>
-      envoyée(s)
-
-      &nbsp;•&nbsp;
-
-      🟠
-      <span id="attente">0</span>
-      en attente
-    </div>
-
-    <div
-      id="uploadStatus"
-      style="margin-top:4px;color:#777;"
-    ></div>
-
-  </div>
-
-
-  <!-- CAMERA -->
-
-  <label
-    class="big-button camera-button"
-    for="camera"
-  >
-    📷 Prendre une photo
-  </label>
-
-  <input
-    type="file"
-    id="camera"
-    accept="image/*"
-    capture="environment"
-  >
-
-
-  <!-- PHOTOTHEQUE -->
-
-  <label
-    class="big-button library-button"
-    for="phototheque"
-  >
-    🖼️ Ajouter depuis mes photos
-  </label>
-
-  <input
-    type="file"
-    id="phototheque"
-    accept="image/*"
-    multiple
-  >
-<!-- ================================= -->
-<!-- GALERIE VERROUILLEE -->
-<!-- ================================= -->
-
-<div
-  id="galerieVerrouillee"
-  class="container"
-  style="display:none;"
->
-
-  <div class="gallery-header">
-
-    <button
-      class="retour-button"
-      onclick="fermerGalerieVerrouillee()"
-    >
-      ← Retour
+    <button class="start-button" onclick="enregistrerIdentite()">
+      Commencer 📸
     </button>
 
-    <div class="gallery-title">
-      Galerie
-    </div>
-
+    <div id="erreur-identite" style="margin-top:15px;color:#b00020;"></div>
   </div>
 
 
-  <div class="lock-screen">
+  <!-- APPLICATION PRINCIPALE -->
+  <div id="application" class="container" style="display:none;">
+    <h1>📸 Photos Mariage</h1>
 
-    <div class="lock-icon">
-      🔒
+    <div class="subtitle">
+      Prenez vos photos et partagez-les avec nous !
     </div>
 
-    <h2>
-      La galerie ouvrira bientôt
-    </h2>
+    <div class="status">
+      <div id="etatConnexion"></div>
 
-    <p>
-      Continuez à capturer les meilleurs
-      moments du mariage 📸
-    </p>
+      <div>
+        🟢 <span id="envoyees">0</span> envoyée(s)
+        &nbsp;•&nbsp;
+        🟠 <span id="attente">0</span> en attente
+      </div>
 
-    <div class="unlock-date">
-
-      Les photos seront disponibles à partir du
-
-      <strong>
-        1er janvier 2027 à 08h00
-      </strong>
-
+      <div id="uploadStatus" style="margin-top:4px;color:#777;"></div>
     </div>
 
-  </div>
+    <label class="big-button camera-button" for="camera">
+      📷 Prendre une photo
+    </label>
+    <input type="file" id="camera" accept="image/*" capture="environment">
 
-</div>
-<!-- ================================= -->
-<!-- GALERIE -->
-<!-- ================================= -->
+    <label class="big-button library-button" for="phototheque">
+      🖼️ Ajouter depuis mes photos
+    </label>
+    <input type="file" id="phototheque" accept="image/*" multiple>
 
-<div
-  id="galerie"
-  class="container"
-  style="display:none;"
->
-
-  <div class="gallery-header">
-
-    <button
-      class="retour-button"
-      onclick="fermerGalerie()"
-    >
-      ← Retour
+    <button class="big-button gallery-button" onclick="ouvrirGalerie()">
+      🖼️ Voir la galerie
     </button>
 
-    <div class="gallery-title">
-      Galerie
+    <div id="message"></div>
+    <div id="info"></div>
+
+    <div class="offline" id="offline">
+      📵 <strong>Vous êtes hors connexion.</strong>
+      <br><br>
+      Continuez à prendre des photos normalement.
+      <br>
+      Elles sont sécurisées sur ce téléphone et seront envoyées automatiquement
+      dès que la connexion reviendra.
     </div>
-
   </div>
 
 
-  <div class="gallery-tabs">
-
-    <button
-      id="tabToutes"
-      class="gallery-tab active"
-      onclick="afficherToutesPhotos()"
-    >
-      Toutes les photos
-    </button>
-
-    <button
-      id="tabMes"
-      class="gallery-tab"
-      onclick="afficherMesPhotos()"
-    >
-      Mes photos
-    </button>
-
-  </div>
-
-<div class="gallery-search">
-
-  <input
-    id="rechercheGalerie"
-    type="search"
-    placeholder="🔎 Rechercher par prénom ou nom"
-    oninput="afficherGalerie()"
-  >
-
-</div>
-  <div
-    id="galleryGrid"
-    class="gallery-grid"
-  ></div>
-
-</div>
-
-
-<!-- ================================= -->
-<!-- PHOTO PLEIN ECRAN -->
-<!-- ================================= -->
-
-<div
-  id="photoModal"
-  class="photo-modal"
->
-
-  <div class="photo-modal-content">
-
-    <div class="photo-modal-top">
-
-      <button
-        class="photo-close"
-        onclick="fermerPhoto()"
-      >
-        ×
+  <!-- GALERIE VERROUILLÉE -->
+  <div id="galerieVerrouillee" class="container" style="display:none;">
+    <div class="gallery-header">
+      <button class="retour-button" onclick="fermerGalerieVerrouillee()">
+        ← Retour
       </button>
-
+      <div class="gallery-title">Galerie</div>
     </div>
 
-    <div class="photo-zone">
+    <div class="lock-screen">
+      <div class="lock-icon">🔒</div>
+      <h2>La galerie ouvrira bientôt</h2>
 
-      <img
-        id="photoGrande"
-        alt="Photo"
-      >
+      <p>
+        Continuez à capturer les meilleurs moments du mariage 📸
+      </p>
 
+      <div class="unlock-date">
+        Les photos seront disponibles à partir du
+        <strong>1er janvier 2027 à 08h00</strong>
+      </div>
     </div>
-
-    <div class="photo-actions">
-
-   <button
-  id="downloadPhoto"
-  class="download-button"
-  onclick="enregistrerPhotoTelephone()"
->
-  📲 Enregistrer / Partager
-</button>
-
-    </div>
-
   </div>
 
-</div>
 
-<script>
+  <!-- GALERIE OUVERTE -->
+  <div id="galerie" class="container" style="display:none;">
+    <div class="gallery-header">
+      <button class="retour-button" onclick="fermerGalerie()">
+        ← Retour
+      </button>
+      <div class="gallery-title">Galerie</div>
+    </div>
 
+    <div class="gallery-tabs">
+      <button id="tabToutes" class="gallery-tab active" onclick="afficherToutesPhotos()">
+        Toutes les photos
+      </button>
+      <button id="tabMes" class="gallery-tab" onclick="afficherMesPhotos()">
+        Mes photos
+      </button>
+    </div>
+
+    <div class="gallery-search">
+      <input
+        id="rechercheGalerie"
+        type="search"
+        placeholder="🔎 Rechercher par prénom ou nom"
+        oninput="afficherGalerie()"
+      >
+    </div>
+
+    <div id="galleryGrid" class="gallery-grid"></div>
+  </div>
+
+
+  <!-- PHOTO PLEIN ÉCRAN -->
+  <div id="photoModal" class="photo-modal">
+    <div class="photo-modal-content">
+      <div class="photo-modal-top">
+        <button class="photo-close" onclick="fermerPhoto()">×</button>
+      </div>
+
+      <div class="photo-zone">
+        <img id="photoGrande" alt="Photo">
+      </div>
+
+      <div class="photo-actions">
+        <button
+          id="downloadPhoto"
+          class="download-button"
+          onclick="enregistrerPhotoTelephone()"
+        >
+          📲 Enregistrer / Partager
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
 // =====================================================
 // CONFIGURATION
 // =====================================================
@@ -1899,6 +1749,7 @@ function nettoyerMessage() {
 
 let photosGalerie = [];
 let photoActuelle = null;
+const cachePhotos = new Map();
 let filtreGalerie =
   "toutes";
 
@@ -2030,7 +1881,7 @@ async function ouvrirGalerie() {
 
 }
 
-  function fermerGalerieVerrouillee() {
+function fermerGalerieVerrouillee() {
 
   document
     .getElementById(
@@ -2501,43 +2352,28 @@ async function chargerMiniature(
 
 async function recupererPhotoAPI(id) {
 
-  const reponse =
-    await fetch(
+  if (cachePhotos.has(id)) {
+    return cachePhotos.get(id);
+  }
 
-      API_URL
-
-      + "?action=photo&id="
-
-      + encodeURIComponent(id)
-
-    );
-
+  const reponse = await fetch(
+    API_URL + "?action=photo&id=" + encodeURIComponent(id)
+  );
 
   if (!reponse.ok) {
-
-    throw new Error(
-      "Photo inaccessible."
-    );
-
+    throw new Error("Photo inaccessible.");
   }
 
-
-  const resultat =
-    await reponse.json();
-
+  const resultat = await reponse.json();
 
   if (!resultat.ok) {
-
     throw new Error(
-      resultat.erreur ||
-      "Photo inaccessible."
+      resultat.erreur || "Photo inaccessible."
     );
-
   }
 
-
+  cachePhotos.set(id, resultat);
   return resultat;
-
 }
 
 
@@ -2832,8 +2668,7 @@ function fermerPhoto() {
 chargerIdentite();
 
 statutConnexion();
-
-</script>
+  </script>
 
 </body>
 </html>
